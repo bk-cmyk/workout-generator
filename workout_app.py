@@ -2,11 +2,11 @@ import streamlit as st
 import pandas as pd
 
 # 1. Page Setup
-st.set_page_config(page_title="My Workout Generator", page_icon="💪")
+st.set_page_config(page_title="Workout Generator", page_icon="💪")
 
 # Title and Subtitle
 st.title("🏋️ Daily Workout Generator")
-st.markdown("### *Three sets for each block*") # This adds the instruction right under the title
+st.markdown("### *Dumbbells, Resistance Bands, and Bodyweight workouts. Three sets for each block*") # This adds the instruction right under the title
 
 # 2. Load Data from your Live CSV link
 # Use your /export?format=csv link here
