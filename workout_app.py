@@ -7,11 +7,16 @@ st.title("🏋️ Daily Workout Generator")
 
 # 2. Load Data from your Live CSV link
 # Replace 'YOUR_CSV_URL' with the link you copied from Google Sheets
-CSV_URL = 'YOUR_CSV_URL'
+CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSaHE0jUfiF6TrlsS2Trkhw1IRLu6vMQHdVOGHtvANQm5TUPQUHJf7XBYaLOwvRKjTox5P1xmfLa7ME/pub?output=csv'
 
 def load_data():
-    df = pd.read_csv(CSV_URL)
-    return df
+    try:
+        df = pd.read_csv(CSV_URL)
+        return df
+    except Exception as e:
+        st.error(f"Error loading data: {e}")
+        st.write("Current URL being used:", CSV_URL)
+        return pd.DataFrame() # Returns an empty dataframe so the app doesn't crash
 
 data = load_data()
 
