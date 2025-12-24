@@ -48,7 +48,7 @@ for block, emoji in block_emojis.items():
         for index, row in sample.iterrows():
             st.markdown(f"#### {row['Exercise']}")
             st.write(f"🔢 **Reps:** {row['Reps']} | 🛠️ **Equipment:** {row['Equipment']}")
-            st.caption(f"🎯 Targets: {row['Primary Muscle Focus']}")
+            st.caption(f"🎯 Primary Muscle Focus: {row['Primary Muscle Focus']}")
             st.write("") 
     else:
         st.write("No exercises found for this block.")
