@@ -26,11 +26,16 @@ data = load_data()
 if st.button('🎲 Shuffle New Workout'):
     st.rerun()
 
-# 4. Generate the Blocks (3 Exercises Each)
-blocks = ["Lower Body", "Upper Body", "Core"]
+# 4. Define Emojis for each block
+block_emojis = {
+    "Lower Body": "🦵",
+    "Upper Body": "💪",
+    "Core": "🧘"
+}
 
-for block in blocks:
-    st.header(f"🔹 {block}") # Changed subheader to header for a cleaner look
+# 5. Generate the Blocks (3 Exercises Each)
+for block, emoji in block_emojis.items():
+    st.header(f"{emoji} {block}")
     
     # Filter for the specific block
     filtered_df = data[data['Block'] == block]
@@ -41,14 +46,10 @@ for block in blocks:
         
         # Display them
         for index, row in sample.iterrows():
-            # Bold Exercise Name
             st.markdown(f"#### {row['Exercise']}")
-            
-            # Display Reps and Equipment clearly
-            # Note: Ensure 'Reps' is the exact name of your column in Google Sheets
             st.write(f"🔢 **Reps:** {row['Reps']} | 🛠️ **Equipment:** {row['Equipment']}")
             st.caption(f"🎯 Targets: {row['Primary Muscle Focus']}")
-            st.write("") # Adds a tiny bit of spacing
+            st.write("") 
     else:
         st.write("No exercises found for this block.")
     
