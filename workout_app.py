@@ -10,6 +10,13 @@ st.title("🏋️ Daily Workout Generator")
 st.markdown("### *Dumbbells, Resistance Bands, and Bodyweight workouts.*")
 st.markdown("#### *Three sets for each block*")
 
+if st.button('🎲 GENERATE NEW WORKOUT', use_container_width=True):
+    st.session_state.workout_seed = time.time()
+    st.rerun()
+
+if 'workout_seed' not in st.session_state:
+    st.session_state.workout_seed = time.time()
+
 # 2. Data Connection
 CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSaHE0jUfiF6TrlsS2Trkhw1IRLu6vMQHdVOGHtvANQm5TUPQUHJf7XBYaLOwvRKjTox5P1xmfLa7ME/pub?output=csv'
 
@@ -17,6 +24,8 @@ CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSaHE0jUfiF6TrlsS2Trk
 def load_data():
     try:
         df = pd.read_csv(CSV_URL)
+        # NEW: This line removes hidden spaces from the start/end of every text cell
+        df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
         return df
     except:
         return pd.DataFrame()
@@ -38,18 +47,8 @@ if col2.button("⏹️ Reset"):
 
 clock_placeholder = st.sidebar.empty()
 
-# 4. Main UI: Shuffle and Equipment
+# 4. Main UI: Equipment
 st.divider()
-c1, c2 = st.columns([1, 2])
-
-# SHUFFLE FEATURE: Moved to main screen for visibility
-if c1.button('🎲 SHUFFLE WORKOUT', use_container_width=True):
-    st.session_state.workout_seed = time.time()
-    st.rerun()
-
-if 'workout_seed' not in st.session_state:
-    st.session_state.workout_seed = time.time()
-
 # EQUIPMENT FILTER: Moved to main screen to clean up sidebar
 if not data.empty:
     equipment_list = data['Equipment'].unique().tolist()
