@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import time  # <--- Make sure this line is here!
 
 # 1. Page Setup
 st.set_page_config(page_title="Workout Generator", page_icon="💪")
