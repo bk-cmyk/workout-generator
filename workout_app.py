@@ -41,21 +41,28 @@ if col2.button("⏹️ Reset"):
 clock_placeholder = st.sidebar.empty()
 
 # 4. Main UI: Shuffle and Equipment
-st.divider()
-c1, c2 = st.columns([1, 2])
+sst.divider()
 
-# SHUFFLE FEATURE: Moved to main screen for visibility
-if c1.button('🎲 SHUFFLE WORKOUT', use_container_width=True):
+# 1. Shuffle Button (Full Width at the Top)
+if st.button('🎲 SHUFFLE WORKOUT', use_container_width=True):
+    # Update the seed and clear checkboxes by resetting session state keys
     st.session_state.workout_seed = time.time()
     st.rerun()
 
+# Ensure we have a seed for the first load
 if 'workout_seed' not in st.session_state:
     st.session_state.workout_seed = time.time()
 
-# EQUIPMENT FILTER: Moved to main screen to clean up sidebar
+# 2. Equipment Filter (Full Width directly below)
 if not data.empty:
-    equipment_list = data['Equipment'].unique().tolist()
-    selected_equip = c2.multiselect("Filter Equipment", options=equipment_list, default=equipment_list)
+    # Use .strip() to fix the "double dumbbells" issue if not already fixed in load_data
+    equipment_list = sorted(data['Equipment'].str.strip().unique().tolist())
+    
+    selected_equip = st.multiselect(
+        "Filter Equipment", 
+        options=equipment_list, 
+        default=equipment_list
+    )
 else:
     selected_equip = []
 
