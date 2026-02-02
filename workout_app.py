@@ -52,32 +52,29 @@ if 'workout_seed' not in st.session_state or st.sidebar.button('🎲 Shuffle New
 # Filter data based on equipment
 filtered_data = data[data['Equipment'].isin(selected_equip)]
 
-# 5. The Progress Bar
+# 5. The Progress Bar and Percentage Label
 st.divider()
-cols = st.columns([1, 4])
-with cols[0]:
-    st.write("### Progress")
-progress_bar = st.progress(0)
+completed_count = 0
+total_exercises = 9 # Adjust this if you change your workout size
+
+# Calculate percentage for display
+if total_exercises > 0:
+    # We calculate this later, but we initialize the container here
+    progress_placeholder = st.empty()
+    progress_bar = st.progress(0)
 
 # 6. Generate Blocks
 block_emojis = {"Lower Body": "🦵", "Upper Body": "💪", "Core": "🧘"}
-total_exercises = 9 # 3 per block
-completed_count = 0
 
 for block, emoji in block_emojis.items():
     st.header(f"{emoji} {block}")
     
-    # Logic to pick 3 random exercises based on our 'seed'
     block_df = filtered_data[filtered_data['Block'] == block]
     if not block_df.empty:
-        # Use a consistent sample based on seed so checkboxes don't vanish
         sample = block_df.sample(n=min(3, len(block_df)), random_state=int(st.session_state.workout_seed % 1000))
         
         for _, row in sample.iterrows():
-            # Create unique key for the checkbox
             task_key = f"{block}_{row['Exercise']}"
-            
-            # Checkbox logic
             is_done = st.checkbox(f"**{row['Exercise']}**", key=task_key)
             if is_done:
                 completed_count += 1
@@ -86,9 +83,14 @@ for block, emoji in block_emojis.items():
             st.caption(f"🎯 Targets: {row['Primary Muscle Focus']}")
             st.write("---")
 
-# Update Progress Bar
+# Update Progress Bar and Percentage Text
 if total_exercises > 0:
-    progress_percent = completed_count / total_exercises
-    progress_bar.progress(progress_percent)
-    if completed_count == total_exercises:
+    percent_val = int((completed_count / total_exercises) * 100)
+    progress_bar.progress(completed_count / total_exercises)
+    
+    # This displays the percentage text right above the bar
+    progress_placeholder.markdown(f"### Progress: {percent_val}%")
+    
+    if percent_val == 100:
         st.success("Workout Complete! 🎉")
+        st.balloons()
