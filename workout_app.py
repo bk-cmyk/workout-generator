@@ -25,20 +25,41 @@ def load_data():
 
 data = load_data()
 
-# 3. Sidebar: Stopwatch Only
-st.sidebar.header("🏃 Workout Timer")
+# 3. Sidebar: Stopwatch and Rest Timer
+st.sidebar.header("🏃 Workout Tools")
 
+# --- Workout Stopwatch ---
+st.sidebar.subheader("Total Time")
 if 'start_time' not in st.session_state:
     st.session_state.start_time = None
 
-col1, col2 = st.sidebar.columns(2)
-if col1.button("▶️ Start"):
+sw_col1, sw_col2 = st.sidebar.columns(2)
+if sw_col1.button("▶️ Start"):
     st.session_state.start_time = time.time()
-if col2.button("⏹️ Reset"):
+if sw_col2.button("⏹️ Reset"):
     st.session_state.start_time = None
     st.rerun()
 
 clock_placeholder = st.sidebar.empty()
+
+st.sidebar.divider()
+
+# --- NEW: Rest Timer ---
+st.sidebar.subheader("⏲️ Rest Timer")
+# Let's you pick your rest period (default 60s)
+rest_seconds = st.sidebar.number_input("Seconds", min_value=5, max_value=300, value=60, step=5)
+
+if st.sidebar.button("⏱️ Start Rest"):
+    timer_placeholder = st.sidebar.empty()
+    for t in range(rest_seconds, -1, -1):
+        # Format the countdown
+        m, s = divmod(t, 60)
+        timer_placeholder.metric("Rest Remaining", f"{m:02d}:{s:02d}")
+        time.sleep(1)
+    
+    timer_placeholder.success("Time's up! Back to work! 🔥")
+    # A little extra celebration for finishing a rest
+    st.toast("Rest Complete!", icon="💪")
 
 # 4. Main UI: Shuffle and Equipment
 st.divider()
@@ -98,7 +119,6 @@ p_bar.progress(completed_count / total_exercises)
 
 if percent == 100:
     st.success("Workout Complete! 🎉")
-    st.balloons()
 
 # 8. Ticking Clock Logic (At the very bottom so it doesn't interrupt calculation)
 if st.session_state.start_time:
