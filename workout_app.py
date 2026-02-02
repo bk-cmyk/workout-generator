@@ -33,7 +33,7 @@ else:
     selected_equip = []
 
 # --- Feature: Workout Stopwatch ---
-sst.sidebar.divider()
+st.sidebar.divider()
 st.sidebar.subheader("🏃 Total Workout Time")
 
 if 'start_time' not in st.session_state:
