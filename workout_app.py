@@ -3,7 +3,7 @@ import pandas as pd
 import time
 
 # 1. Page Setup
-st.set_page_config(page_title="Workout Generator", page_icon="💪")
+st.set_page_config(page_title="Bonnie's Workout Generator", page_icon="🏋️")
 
 # Title and Subtitle
 st.title("🏋️ Daily Workout Generator")
