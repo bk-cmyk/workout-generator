@@ -66,18 +66,6 @@ if st.session_state.start_time:
 else:
     clock_placeholder.info("Press Start to time your session!")
 
-# --- Feature: Rest Timer ---
-st.sidebar.divider()
-st.sidebar.subheader("⏲️ Rest Timer")
-rest_time = st.sidebar.number_input("Seconds", min_value=5, max_value=300, value=60, step=5)
-if st.sidebar.button("⏱️ Start Timer"):
-    t_holder = st.sidebar.empty()
-    for t in range(rest_time, -1, -1):
-        t_holder.metric("Rest Remaining", f"{t}s")
-        time.sleep(1)
-    st.sidebar.success("Go! 🔥")
-    st.balloons()
-
 # 4. Workout Generation Logic
 if 'workout_seed' not in st.session_state or st.sidebar.button('🎲 Shuffle New Workout'):
     st.session_state.workout_seed = time.time() # This ensures random selection on shuffle
