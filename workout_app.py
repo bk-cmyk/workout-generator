@@ -41,7 +41,7 @@ if col2.button("⏹️ Reset"):
 clock_placeholder = st.sidebar.empty()
 
 # 4. Main UI: Shuffle and Equipment
-sst.divider()
+st.divider()
 
 # 1. Shuffle Button (Full Width at the Top)
 if st.button('🎲 SHUFFLE WORKOUT', use_container_width=True):
