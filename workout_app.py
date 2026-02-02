@@ -32,6 +32,39 @@ if not data.empty:
 else:
     selected_equip = []
 
+# --- Feature: Workout Stopwatch ---
+st.sidebar.divider()
+st.sidebar.subheader("🏃 Total Workout Time")
+
+# Initialize start time if not already set
+if 'start_time' not in st.session_state:
+    st.session_state.start_time = None
+
+col1, col2 = st.sidebar.columns(2)
+
+if col1.button("▶️ Start"):
+    st.session_state.start_time = time.time()
+
+if col2.button("⏹️ Reset"):
+    st.session_state.start_time = None
+
+# Display the elapsed time
+if st.session_state.start_time:
+    # Calculate difference
+    elapsed_seconds = int(time.time() - st.session_state.start_time)
+    
+    # Format to HH:MM:SS
+    mins, secs = divmod(elapsed_seconds, 60)
+    hours, mins = divmod(mins, 60)
+    
+    st.sidebar.metric("Elapsed Time", f"{hours:02d}:{mins:02d}:{secs:02d}")
+    
+    # Optional: Auto-refresh the sidebar clock every few seconds
+    # Note: This will cause the app to rerun slightly more often
+    # st.empty() + time.sleep(1) + st.rerun() logic can be added here if desired
+else:
+    st.sidebar.write("Press Start to time your session!")
+
 # --- Feature: Rest Timer ---
 st.sidebar.divider()
 st.sidebar.subheader("⏲️ Rest Timer")
