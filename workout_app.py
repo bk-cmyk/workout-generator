@@ -1,83 +1,46 @@
-import streamlit as st
-import pandas as pd
-import time
-
-# 1. Page Setup
-st.set_page_config(page_title="Bonnie's Workout Generator", page_icon="🏋️")
-
-# Title and Subtitle
-st.title("🏋️ Daily Workout Generator")
-st.markdown("### *Dumbbells, Resistance Bands, and Bodyweight workouts.*")
-st.markdown("#### *Three sets for each block*")
-
-# 2. Data Connection
+# ==========================================
+# 2. Data Connection (Updated)
+# ==========================================
 CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSaHE0jUfiF6TrlsS2Trkhw1IRLu6vMQHdVOGHtvANQm5TUPQUHJf7XBYaLOwvRKjTox5P1xmfLa7ME/pub?output=csv'
 
 @st.cache_data
 def load_data():
     try:
         df = pd.read_csv(CSV_URL)
-        # NEW: This line removes hidden spaces from the start/end of every text cell
+        
+        # Clean column headers: remove leading/trailing spaces
+        df.columns = df.columns.str.strip()
+        
+        # Clean text cells: remove hidden spaces
         df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
         return df
-    except:
+    except Exception as e:
+        # If there's an error loading, show it in the app logs or a safe warning
+        st.sidebar.error(f"Error loading data: {e}")
         return pd.DataFrame()
 
 data = load_data()
 
-# 3. Sidebar: Stopwatch and Rest Timer
-st.sidebar.header("🏃 Workout Tools")
+# Quick debug check: if the app is still failing, uncomment the line below 
+# to see exactly what columns Pandas is reading from your sheet:
+# st.write("Columns found:", data.columns.tolist())
 
-# --- Workout Stopwatch ---
-st.sidebar.subheader("Total Time")
-if 'start_time' not in st.session_state:
-    st.session_state.start_time = None
 
-sw_col1, sw_col2 = st.sidebar.columns(2)
-if sw_col1.button("▶️ Start"):
-    st.session_state.start_time = time.time()
-if sw_col2.button("⏹️ Reset"):
-    st.session_state.start_time = None
-    st.rerun()
-
-clock_placeholder = st.sidebar.empty()
-
-st.sidebar.divider()
-
-# --- NEW: Rest Timer ---
-st.sidebar.subheader("⏲️ Rest Timer")
-# Let's you pick your rest period (default 60s)
-rest_seconds = st.sidebar.number_input("Seconds", min_value=5, max_value=300, value=60, step=5)
-
-if st.sidebar.button("⏱️ Start Rest"):
-    timer_placeholder = st.sidebar.empty()
-    for t in range(rest_seconds, -1, -1):
-        # Format the countdown
-        m, s = divmod(t, 60)
-        timer_placeholder.metric("Rest Remaining", f"{m:02d}:{s:02d}")
-        time.sleep(1)
-    
-    timer_placeholder.success("Time's up! Back to work! 🔥")
-    # A little extra celebration for finishing a rest
-    st.toast("Rest Complete!", icon="💪")
-
-# 4. Main UI: Shuffle and Equipment
+# ==========================================
+# 4. Main UI: Shuffle and Equipment (Updated)
+# ==========================================
 st.divider()
 
-# 1. Shuffle Button (Full Width at the Top)
 if st.button('🎲 SHUFFLE WORKOUT', use_container_width=True):
-    # Update the seed and clear checkboxes by resetting session state keys
     st.session_state.workout_seed = time.time()
     st.rerun()
 
-# Ensure we have a seed for the first load
 if 'workout_seed' not in st.session_state:
     st.session_state.workout_seed = time.time()
 
-# 2. Equipment Filter (Full Width directly below)
-if not data.empty:
-    # Use .strip() to fix the "double dumbbells" issue if not already fixed in load_data
-    equipment_list = sorted(data['Equipment'].str.strip().unique().tolist())
+# Check if data loaded successfully and the expected column exists
+if not data.empty and 'Equipment' in data.columns:
+    equipment_list = sorted(data['Equipment'].unique().tolist())
     
     selected_equip = st.multiselect(
         "Filter Equipment", 
@@ -87,44 +50,30 @@ if not data.empty:
 else:
     selected_equip = []
 
-# 5. Progress Bar Setup
-progress_placeholder = st.empty()
-p_bar = st.empty()
-completed_count = 0
-total_exercises = 9 
 
-# 6. Generate Blocks
-filtered_data = data[data['Equipment'].isin(selected_equip)]
-block_emojis = {"Lower Body": "🦵", "Upper Body": "💪", "Core": "🧘"}
+# ==========================================
+# 6. Generate Blocks (Updated with Safety Check)
+# ==========================================
+# Wrap everything in a check to make sure data exists before filtering
+if not data.empty and 'Equipment' in data.columns:
+    filtered_data = data[data['Equipment'].isin(selected_equip)]
+    block_emojis = {"Lower Body": "🦵", "Upper Body": "💪", "Core": "🧘"}
 
-for block, emoji in block_emojis.items():
-    st.header(f"{emoji} {block}")
-    block_df = filtered_data[filtered_data['Block'] == block]
-    
-    if not block_df.empty:
-        sample = block_df.sample(n=min(3, len(block_df)), random_state=int(st.session_state.workout_seed % 1000))
-        for _, row in sample.iterrows():
-            # Checkbox persistence
-            if st.checkbox(f"**{row['Exercise']}**", key=f"{block}_{row['Exercise']}"):
-                completed_count += 1
+    for block, emoji in block_emojis.items():
+        st.header(f"{emoji} {block}")
+        
+        # Ensure 'Block' column also exists before filtering
+        if 'Block' in filtered_data.columns:
+            block_df = filtered_data[filtered_data['Block'] == block]
             
-            st.write(f"🔢 **Reps:** {row['Reps']} | 🛠️ **Equip:** {row['Equipment']}")
-            st.caption(f"🎯 Targets: {row['Primary Muscle Focus']}")
-            st.write("---")
-
-# 7. Update Progress (Calculated after loop to prevent glitch)
-percent = int((completed_count / total_exercises) * 100)
-progress_placeholder.markdown(f"## Progress: {percent}%")
-p_bar.progress(completed_count / total_exercises)
-
-if percent == 100:
-    st.success("Workout Complete! 🎉")
-
-# 8. Ticking Clock Logic (At the very bottom so it doesn't interrupt calculation)
-if st.session_state.start_time:
-    elapsed = int(time.time() - st.session_state.start_time)
-    m, s = divmod(elapsed, 60)
-    h, m = divmod(m, 60)
-    clock_placeholder.metric("Elapsed Time", f"{h:02d}:{m:02d}:{s:02d}")
-    time.sleep(1)
-    st.rerun()
+            if not block_df.empty:
+                sample = block_df.sample(n=min(3, len(block_df)), random_state=int(st.session_state.workout_seed % 1000))
+                for _, row in sample.iterrows():
+                    if st.checkbox(f"**{row['Exercise']}**", key=f"{block}_{row['Exercise']}"):
+                        completed_count += 1
+                    
+                    st.write(f"🔢 **Reps:** {row['Reps']} | 🛠️ **Equip:** {row['Equipment']}")
+                    st.caption(f"🎯 Targets: {row.get('Primary Muscle Focus', 'N/A')}")
+                    st.write("---")
+else:
+    st.warning("⚠️ Unable to load exercises. Please check your Google Sheets connection or column headers.")
