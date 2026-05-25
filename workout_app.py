@@ -145,4 +145,6 @@ if st.session_state.start_time:
     elapsed = int(time.time() - st.session_state.start_time)
     m, s = divmod(elapsed, 60)
     h, m = divmod(m, 60)
-    clock_placeholder.metric("Elapsed Time", f"{h:02d}:{m:02d}:{
+    clock_placeholder.metric("Elapsed Time", f"{h:02d}:{m:02d}:{s:02d}")
+    time.sleep(1)
+    st.rerun()
