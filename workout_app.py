@@ -19,8 +19,8 @@ def load_data():
         df = pd.read_csv(CSV_URL)
         # Force all column headers to lowercase and strip whitespace
         df.columns = df.columns.str.strip().str.lower()
-        # Clean text cells: remove hidden spaces
-        df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+        # Clean text cells: remove hidden spaces using modern .map()
+        df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
         return df, "Success"
     except Exception as e:
         # Pass the exact error back for debugging
