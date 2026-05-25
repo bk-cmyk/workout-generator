@@ -36,7 +36,7 @@ elif data.empty:
     st.sidebar.warning("⚠️ Connected to URL, but data frame is completely empty.")
 else:
     st.sidebar.success("✅ Google Sheets Connected!")
-    st.sidebar.write("**Columns Found:**", data.columns.tolist())
+    st.sidebar.write("**Columns Found (Lowercase):**", data.columns.tolist())
     st.sidebar.write(f"**Total Rows:** {len(data)}")
 
 st.sidebar.divider()
@@ -116,17 +116,20 @@ if not data.empty and 'equipment' in data.columns and 'block' in data.columns:
         if not block_df.empty:
             sample = block_df.sample(n=min(3, len(block_df)), random_state=int(st.session_state.workout_seed % 1000))
             for _, row in sample.iterrows():
-                exercise_name = row['exercise']
+                # Safe lookups using .get() to prevent KeyErrors if columns are renamed
+                exercise_name = row.get('exercise', 'Unknown Exercise')
+                reps_value = row.get('reps', row.get('repetitions', 'N/A'))
+                equip_value = row.get('equipment', 'N/A')
+                muscle_focus = row.get('target muscle', row.get('primary muscle focus', 'N/A'))
+                
                 if st.checkbox(f"**{exercise_name}**", key=f"{block_name}_{exercise_name}"):
                     completed_count += 1
                 
-                st.write(f"🔢 **Reps:** {row['reps']} | 🛠️ **Equip:** {row['equipment']}")
-                
-                muscle_focus = row.get('target muscle', row.get('primary muscle focus', 'N/A'))
+                st.write(f"🔢 **Reps:** {reps_value} | 🛠️ **Equip:** {equip_value}")
                 st.caption(f"🎯 Targets: {muscle_focus}")
                 st.write("---")
 else:
-    st.warning("⚠️ Unable to generate workout blocks. Please check the 'App Diagnosis' tool in the sidebar to see what went wrong.")
+    st.warning("⚠️ Unable to generate workout blocks. Check your sidebar diagnosis to ensure 'block' and 'equipment' columns exist in your sheet.")
 
 # 7. Update Progress
 if total_exercises > 0:
@@ -142,6 +145,4 @@ if st.session_state.start_time:
     elapsed = int(time.time() - st.session_state.start_time)
     m, s = divmod(elapsed, 60)
     h, m = divmod(m, 60)
-    clock_placeholder.metric("Elapsed Time", f"{h:02d}:{m:02d}:{s:02d}")
-    time.sleep(1)
-    st.rerun()
+    clock_placeholder.metric("Elapsed Time", f"{h:02d}:{m:02d}:{
