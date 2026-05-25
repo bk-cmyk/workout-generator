@@ -13,21 +13,33 @@ st.markdown("#### *Three sets for each block*")
 # 2. Data Connection
 CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTDv8hjERkT7bcQ6MfJqDnKGxwtqvJE6KRnaK0oMQeT0v07Df0e1JMu0Ne-ZxiFu7kvunfkY3t2xDO3/pub?gid=1238381494&single=true&output=csv'
 
-@st.cache_data(ttl=600)  # Caches for 10 minutes so updates pull through automatically
+@st.cache_data(ttl=600)  # Caches for 10 minutes
 def load_data():
     try:
         df = pd.read_csv(CSV_URL)
-        # Force all column headers to lowercase and strip whitespace to prevent casing bugs
+        # Force all column headers to lowercase and strip whitespace
         df.columns = df.columns.str.strip().str.lower()
-        # Clean text cells: remove hidden spaces from text cells
+        # Clean text cells: remove hidden spaces
         df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
-        return df
+        return df, "Success"
     except Exception as e:
-        return pd.DataFrame()
+        # Pass the exact error back for debugging
+        return pd.DataFrame(), str(e)
 
-data = load_data()
+data, debug_status = load_data()
 
-# 3. Sidebar: Stopwatch and Rest Timer
+# 3. Sidebar: Tools & LIVE DEBUGGER
+st.sidebar.header("⚙️ App Diagnosis")
+if debug_status != "Success":
+    st.sidebar.error(f"❌ Connection Error: {debug_status}")
+elif data.empty:
+    st.sidebar.warning("⚠️ Connected to URL, but data frame is completely empty.")
+else:
+    st.sidebar.success("✅ Google Sheets Connected!")
+    st.sidebar.write("**Columns Found:**", data.columns.tolist())
+    st.sidebar.write(f"**Total Rows:** {len(data)}")
+
+st.sidebar.divider()
 st.sidebar.header("🏃 Workout Tools")
 
 # --- Workout Stopwatch ---
@@ -72,7 +84,7 @@ if st.button('🎲 SHUFFLE WORKOUT', use_container_width=True):
 if 'workout_seed' not in st.session_state:
     st.session_state.workout_seed = time.time()
 
-# Equipment Filter (checks for lowercase key)
+# Equipment Filter
 if not data.empty and 'equipment' in data.columns:
     equipment_list = sorted(data['equipment'].unique().tolist())
     
@@ -90,7 +102,7 @@ p_bar = st.empty()
 completed_count = 0
 total_exercises = 9 
 
-# 6. Generate Blocks (Using robust lowercase column references)
+# 6. Generate Blocks
 if not data.empty and 'equipment' in data.columns and 'block' in data.columns:
     filtered_data = data[data['equipment'].isin(selected_equip)]
     block_emojis = {"Lower Body": "🦵", "Upper Body": "💪", "Core": "🧘"}
@@ -98,25 +110,23 @@ if not data.empty and 'equipment' in data.columns and 'block' in data.columns:
     for block_name, emoji in block_emojis.items():
         st.header(f"{emoji} {block_name}")
         
-        # Match case-insensitively against your sheet's values
+        # Case-insensitive block match
         block_df = filtered_data[filtered_data['block'].str.lower() == block_name.lower()]
         
         if not block_df.empty:
             sample = block_df.sample(n=min(3, len(block_df)), random_state=int(st.session_state.workout_seed % 1000))
             for _, row in sample.iterrows():
                 exercise_name = row['exercise']
-                # Checkbox persistence
                 if st.checkbox(f"**{exercise_name}**", key=f"{block_name}_{exercise_name}"):
                     completed_count += 1
                 
                 st.write(f"🔢 **Reps:** {row['reps']} | 🛠️ **Equip:** {row['equipment']}")
                 
-                # Resolves variations like 'target muscle', 'target muscle focus', etc.
                 muscle_focus = row.get('target muscle', row.get('primary muscle focus', 'N/A'))
                 st.caption(f"🎯 Targets: {muscle_focus}")
                 st.write("---")
 else:
-    st.warning("⚠️ Unable to generate workout blocks. Please verify that your Google Sheet includes columns for 'Block', 'Equipment', 'Exercise', and 'Reps'.")
+    st.warning("⚠️ Unable to generate workout blocks. Please check the 'App Diagnosis' tool in the sidebar to see what went wrong.")
 
 # 7. Update Progress
 if total_exercises > 0:
