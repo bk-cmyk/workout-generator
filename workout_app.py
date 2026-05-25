@@ -11,7 +11,7 @@ st.markdown("### *Dumbbells, Resistance Bands, and Bodyweight workouts.*")
 st.markdown("#### *Three sets for each block*")
 
 # 2. Data Connection
-CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSaHE0jUfiF6TrlsS2Trkhw1IRLu6vMQHdVOGHtvANQm5TUPQUHJf7XBYaLOwvRKjTox5P1xmfLa7ME/pub?output=csv'
+CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTDv8hjERkT7bcQ6MfJqDnKGxwtqvJE6KRnaK0oMQeT0v07Df0e1JMu0Ne-ZxiFu7kvunfkY3t2xDO3/pub?gid=1238381494&single=true&output=csv'
 
 @st.cache_data
 def load_data():
