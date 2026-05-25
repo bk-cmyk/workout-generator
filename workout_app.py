@@ -10,20 +10,20 @@ st.title("🏋️ Daily Workout Generator")
 st.markdown("### *Dumbbells, Resistance Bands, and Bodyweight workouts.*")
 st.markdown("#### *Three sets for each block*")
 
-# 2. Data Connection
+# 2. Data Connection (Updated with your active CSV link)
 CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTDv8hjERkT7bcQ6MfJqDnKGxwtqvJE6KRnaK0oMQeT0v07Df0e1JMu0Ne-ZxiFu7kvunfkY3t2xDO3/pub?gid=1238381494&single=true&output=csv'
 
-@st.cache_data
+# Set TTL to 10 minutes so updates to your Google Sheet pull through quickly
+@st.cache_data(ttl=600)
 def load_data():
     try:
         df = pd.read_csv(CSV_URL)
         # Clean column headers: remove accidental leading/trailing spaces
         df.columns = df.columns.str.strip()
-        # Clean text cells: remove hidden spaces from the start/end of every text cell
+        # Clean text cells: remove hidden spaces from text cells
         df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
         return df
     except Exception as e:
-        # Failsafe fallback if Google Sheets is unreachable
         return pd.DataFrame()
 
 data = load_data()
@@ -73,7 +73,7 @@ if st.button('🎲 SHUFFLE WORKOUT', use_container_width=True):
 if 'workout_seed' not in st.session_state:
     st.session_state.workout_seed = time.time()
 
-# Equipment Filter (with safety check to see if column exists)
+# Equipment Filter
 if not data.empty and 'Equipment' in data.columns:
     equipment_list = sorted(data['Equipment'].unique().tolist())
     
@@ -91,7 +91,7 @@ p_bar = st.empty()
 completed_count = 0
 total_exercises = 9 
 
-# 6. Generate Blocks (Safely guarded against KeyErrors)
+# 6. Generate Blocks (Updated column target matching)
 if not data.empty and 'Equipment' in data.columns and 'Block' in data.columns:
     filtered_data = data[data['Equipment'].isin(selected_equip)]
     block_emojis = {"Lower Body": "🦵", "Upper Body": "💪", "Core": "🧘"}
@@ -108,11 +108,13 @@ if not data.empty and 'Equipment' in data.columns and 'Block' in data.columns:
                     completed_count += 1
                 
                 st.write(f"🔢 **Reps:** {row['Reps']} | 🛠️ **Equip:** {row['Equipment']}")
-                # Using .get() for optional columns prevents future KeyErrors
-                st.caption(f"🎯 Targets: {row.get('Primary Muscle Focus', 'N/A')}")
+                
+                # Dynamic check for your 'Target Muscle' column
+                muscle_focus = row.get('Target Muscle', row.get('Primary Muscle Focus', 'N/A'))
+                st.caption(f"🎯 Targets: {muscle_focus}")
                 st.write("---")
 else:
-    st.warning("⚠️ Unable to generate workout blocks. Please check that your Google Sheet is published and contains the required 'Block' and 'Equipment' columns.")
+    st.warning("⚠️ Unable to generate workout blocks. Please check that your Google Sheet is published and contains 'Block' and 'Equipment' columns.")
 
 # 7. Update Progress
 if total_exercises > 0:
